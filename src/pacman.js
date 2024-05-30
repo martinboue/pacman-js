@@ -13,17 +13,21 @@ const directionsToAngle = {
 
 export class Pacman extends Entity {
 
-	direction;
 	score;
+	game;
+	direction;
 	respawning;
 
-	constructor(grid, score) {
+	constructor(grid, score, game) {
 		super(PACMAN_SPAWN.x, PACMAN_SPAWN.y, CELL_SIZE * 1.5, grid, 'yellow');
-		this.direction = 'RIGHT';
 		this.score = score;
+		this.game = game;
+		this.direction = 'RIGHT';
 		this.respawning = false;
 
 		window.addEventListener('keydown', (event) => {
+			if (this.game.paused || this.game.starting || this.respawning) return;
+
 			switch (event.key) {
 				case 'ArrowUp':
 					this.direction = 'UP';
@@ -70,12 +74,6 @@ export class Pacman extends Entity {
 			this.x = newX;
 			this.y = newY;
 		}
-
-		// Eat the dot
-		if (this.grid[newCell.y][newCell.x] === '.') {
-			this.grid[newCell.y][newCell.x] = 0;
-			this.score.add(10);
-		}
 	}
 
 	draw(context, deltaTime, gameTime) {
@@ -108,7 +106,8 @@ export class Pacman extends Entity {
 		
 		if (stillAlive) {
 			this.respawning = true;
-	
+			this.direction = 'RIGHT';
+			
 			setTimeout(() => {
 				this.respawning = false;
 				this.x = PACMAN_SPAWN.x;
