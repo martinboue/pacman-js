@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PACMAN.js</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+</head>
+<body>
+    <div id="container">
+        <h1>PACMAN.js</h1>
+        <div id="top-container">
+            <p id="score">SCORE: 70</p>
+            <p id="high-score">HIGH SCORE: 70</p>
+        </div>
+        <div id="game-container">
+            <div class="message" id="ready">READY!</div>
+            <div class="message" id="game-over">GAME OVER</div>
+            <canvas id="game" width="560" height="620"></canvas>
+        </div>
+        <div id="bottom-container">
+            <p id="lives">CCC</p>
+            <p id="bonuses">ABCD</p>
+        </div>
+    </div>
+
+    <footer>
+        <footer>
+            <a href="https://martinboue.fr" target="_blank">by Martin Boué</a>
+             -
+            <a href="https://github.com/martinboue/pacman-js" target="_blank">GitHub</a>
+        </footer>
+    </footer>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>
