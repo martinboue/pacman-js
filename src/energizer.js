@@ -1,4 +1,5 @@
 import {Entity} from "./entity.js";
+import { CELL_SIZE } from "./constants.js";
 
 const BLINK_DURATION = 300; // ms
 
@@ -9,8 +10,8 @@ export class Energizer extends Entity {
 	visible;
 	score;
 
-	constructor(x, y, cellSize, grid, pacman, score) {
-		super(x, y, cellSize / 4, grid, cellSize, 'pink');
+	constructor(x, y, grid, pacman, score) {
+		super(x, y, CELL_SIZE / 4, grid, 'pink');
 		this.pacman = pacman;
 		this.score = score;
 		this.time = 0;
@@ -29,7 +30,7 @@ export class Energizer extends Entity {
 		if (this.visible) {
 			context.fillStyle = 'pink'; // color of dot
 			context.beginPath();
-			context.arc(this.x, this.y, this.cellSize / 4, 0, 2 * Math.PI);
+			context.arc(this.x, this.y, CELL_SIZE / 3, 0, 2 * Math.PI);
 			context.fill();
 		}
 	}

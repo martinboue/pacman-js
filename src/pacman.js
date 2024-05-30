@@ -1,7 +1,8 @@
 import { Entity } from "./entity.js";
-import { WALL, BARRIER } from "./constants.js";
+import { WALL, BARRIER, CELL_SIZE, PACMAN_SPAWN } from "./constants.js";
 
 const SPEED = 100; // px/s
+const RESPAWN_DURATION = 3000; // ms
 
 const directionsToAngle = {
 	UP: -0.5 * Math.PI,
@@ -14,11 +15,13 @@ export class Pacman extends Entity {
 
 	direction;
 	score;
+	respawning;
 
-	constructor(x, y, direction, grid, cellSize, score) {
-		super(x, y,cellSize * 1.5, grid, cellSize, 'yellow');
-		this.direction = direction;
+	constructor(grid, score) {
+		super(PACMAN_SPAWN.x, PACMAN_SPAWN.y, CELL_SIZE * 1.5, grid, 'yellow');
+		this.direction = 'RIGHT';
 		this.score = score;
+		this.respawning = false;
 
 		window.addEventListener('keydown', (event) => {
 			switch (event.key) {
@@ -39,6 +42,8 @@ export class Pacman extends Entity {
 	}
 
 	move(deltaTime) {
+		if (this.respawning) return;
+
 		let newX = this.x;
 		let newY = this.y;
 
@@ -53,10 +58,10 @@ export class Pacman extends Entity {
 		// Wrap from left to right
 		if (newX < 0) {
 			newCell.x = this.grid[0].length - 1
-			this.x = (newCell.x + 1) * this.cellSize;
+			this.x = (newCell.x + 1) * CELL_SIZE;
 		}
 		// Wrap from right to left
-		else if (newX >= (this.grid[0].length + 1) * this.cellSize) {
+		else if (newX >= (this.grid[0].length + 1) * CELL_SIZE) {
 			newCell.x = 0;
 			this.x = 0;
 		}
@@ -74,6 +79,8 @@ export class Pacman extends Entity {
 	}
 
 	draw(context, deltaTime, gameTime) {
+		// TODO : draw dying/respawning
+		
 		super.draw(context);
 
 		context.fillStyle = 'yellow';
@@ -94,6 +101,22 @@ export class Pacman extends Entity {
 		const bottomAngle = (-1 * Math.sin(gameTime * mouthSpeed) + 1) / 2 * openToCloseAngle;
 		context.arc(this.x, this.y, this.radius, bottomAngle + angleDir, bottomAngle - Math.PI + angleDir);
 		context.fill();
+	}
+
+	die() {
+		const stillAlive = this.score.removeLife();
+		
+		if (stillAlive) {
+			this.respawning = true;
+	
+			setTimeout(() => {
+				this.respawning = false;
+				this.x = PACMAN_SPAWN.x;
+				this.y = PACMAN_SPAWN.y;
+			}, RESPAWN_DURATION);
+		} else {
+			this.dead = true;
+		}
 	}
 
 }

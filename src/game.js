@@ -2,17 +2,19 @@ import { Ghost } from './ghost.js';
 import { Pacman } from './pacman.js';
 import { level } from './level.js';
 import { Score } from "./score.js";
-import {WALL, BARRIER, DOT, ENERGIZER, READY_TIME} from "./constants.js";
+import { DOT, ENERGIZER, READY_TIME, CELL_SIZE } from "./constants.js";
 import {Energizer} from "./energizer.js";
 
 const canvas = document.getElementById('game');
 const context = canvas.getContext('2d');
+context.imageSmoothingEnabled = false;
+context.webkitImageSmoothingEnabled = false;
+context.mozImageSmoothingEnabled = false;
+
 const readyElement = document.getElementById('ready');
+const pauseElement = document.getElementById('pause');
 let gameTime = 0;
 const gameDeltaTime = 1000 / 60; // ms
-
-const cellSize = canvas.height / level.length;
-const dotRadius = cellSize / 10;
 
 let entities = [];
 let pacman;
@@ -22,26 +24,16 @@ let game;
 let paused = false;
 
 function draw() {
-	// Draw background
-	context.fillStyle = "black";
-	context.fillRect(0, 0, canvas.width, canvas.height);
+	// Clear canvas
+	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	// Draw grid
 	for (let y = 0; y < level.length; y++) {
 		for (let x = 0; x < level[y].length; x++) {
 			const cell = level[y][x];
-			if (cell === WALL) {
-				context.fillStyle = 'blue'; // color of wall
-				context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-			} else if (cell === BARRIER) {
-				context.fillStyle = 'pink'; // color of wall
-				const height = cellSize / 5;
-				context.fillRect(x * cellSize, y * cellSize + cellSize / 2 - height / 2, cellSize, height);
-			} else if (cell === DOT) {
-				context.fillStyle = 'pink'; // color of energizer
-				context.beginPath();
-				context.arc(x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, dotRadius, 0, 2 * Math.PI);
-				context.fill();
+			if (cell === DOT) {
+				context.fillStyle = 'pink';
+				context.fillRect(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, 3, 3);
 			}
 		}
 	}
@@ -58,10 +50,12 @@ function run() {
 }
 
 window.addEventListener('keydown', (event) => {
-	if (event.code === 'Space') {
+	if (event.code === 'Space' && game != null) {
 		if (paused) {
+			pauseElement.style.display = 'none';
 			game = setInterval(run, gameDeltaTime);
 		} else {
+			pauseElement.style.display = 'block';
 			clearInterval(game);
 		}
 		paused = !paused;
@@ -76,24 +70,23 @@ function start() {
 
 	// Create entities (pacman, ghost and energizers)
 	entities = [];
-	pacman = new Pacman(14 * cellSize, 23 * cellSize + cellSize / 2, 'RIGHT', level, cellSize, score);
+	pacman = new Pacman(level, score);
 	for (let y = 0; y < level.length; y++) {
 		for (let x = 0; x < level[y].length; x++) {
 			const cell = level[y][x];
 			if (cell === ENERGIZER) {
-				entities.push(new Energizer(x * cellSize + cellSize / 2, y * cellSize + cellSize / 2, cellSize, level, pacman, score));
+				entities.push(new Energizer(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2, level, pacman, score));
 			}
 		}
 	}
 
 	entities.push(
 		pacman,
-		new Ghost(14 * cellSize, 11 * cellSize + cellSize / 2, 'RIGHT', 'red', level, cellSize),
-		new Ghost(12 * cellSize, 14 * cellSize + cellSize / 2, 'DOWN', 'cyan', level, cellSize),
-		new Ghost(14 * cellSize, 14 * cellSize + cellSize / 2, 'LEFT', 'pink', level, cellSize),
-		new Ghost(16 * cellSize, 14 * cellSize + cellSize / 2, 'UP', 'orange', level, cellSize)
+		new Ghost(14 * CELL_SIZE, 11 * CELL_SIZE + CELL_SIZE / 2, 'RIGHT', 'red', level, pacman),
+		new Ghost(12 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'DOWN', 'cyan', level, pacman),
+		new Ghost(14 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'LEFT', 'pink', level, pacman),
+		new Ghost(16 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'UP', 'orange', level, pacman)
 	);
-
 
 	// Draw once then start ready timer
 	draw();
