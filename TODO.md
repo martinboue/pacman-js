@@ -9,6 +9,8 @@
 - Show points and freeze when eating ghost
 - Fruits
 - Phases/levels
+    - Increase difficulty
+    - Reset level when every dot eaten
 - Improve collision detection with wall
 - Sound
 - Responsive layout
