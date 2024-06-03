@@ -19,8 +19,6 @@ export class Energizer extends Entity {
 	}
 
 	draw(context, deltaTime, gameTime) {
-		super.draw(context, deltaTime, gameTime);
-
 		this.time += deltaTime;
 		if (this.time >= BLINK_DURATION) {
 			this.visible = !this.visible;
@@ -33,6 +31,8 @@ export class Energizer extends Entity {
 			context.arc(this.x, this.y, CELL_SIZE / 3, 0, 2 * Math.PI);
 			context.fill();
 		}
+		
+		super.draw(context, deltaTime, gameTime);
 	}
 
 	move() {

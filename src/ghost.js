@@ -6,20 +6,38 @@ const FRIGHTENED_SPEED = 60; // px/s
 const RESPAWN_DURATION = 3000; // ms
 const RESPAWN = { x: 14 * CELL_SIZE, y: 14 * CELL_SIZE + CELL_SIZE / 2 };
 
+const FRAME_COUNT = 2;
+const SPRITE_SIZE = 16; // px
+const DIRECTION_TO_SPRITE_ORDER = {
+	UP: 2,
+	DOWN: 3,
+	LEFT: 1,
+	RIGHT: 0
+};
+
+// Distance a ghost needs to move to change animation frame
+const DISTANCE_PER_FRAME = CELL_SIZE / 2; // px
+
 export class Ghost extends Entity {
 	direction;
-	color;
+	conf;
 	pacman;
 	respawning;
 	score;
+	image;
+	
+	/** Distance the ghost has moved since last frame change */
+	frameDist;
 
-	constructor(x, y, direction, color, grid, pacman, score) {
-		super(x, y, CELL_SIZE * 1.5, grid, color);
+	constructor(x, y, direction, conf, grid, pacman, score) {
+		super(x, y, CELL_SIZE * 1.5, grid, conf.color);
 		this.direction = direction;
-		this.color = color;
+		this.conf = conf;
 		this.pacman = pacman;
 		this.score = score;
 		this.respawning = false;
+		this.image = document.getElementById("ghosts");
+		this.frameDist = 0;
 	}
 
 	move(deltaTime) {
@@ -54,6 +72,7 @@ export class Ghost extends Entity {
 				this.die();
 			} else {
 				this.pacman.die();
+				this.respawn();
 			}
 		}
 	}
@@ -67,31 +86,71 @@ export class Ghost extends Entity {
 		this.pacman.ghostEatenWhileEnergized++;
 
 		setTimeout(() => {
-			this.x = RESPAWN.x;
-			this.y = RESPAWN.y;
-			this.respawning = false;
+			this.respawn();
 		}, RESPAWN_DURATION);
 	}
 
 
-	draw(context) {
-		super.draw(context);
-
-		// Draw ghost
+	draw(context, deltaTime, gameTime) {
 		if (this.respawning) {
-			context.fillStyle = "grey";
-			context.beginPath();
-			context.arc(this.x, this.y, this.radius / 2, 0, 2 * Math.PI);
-			context.fill();
+			this.drawRespawning(context);
+		} else if (this.pacman.energized) {
+			this.drawFrightened(context, deltaTime);
 		} else {
-			if (this.pacman.energized) {
-				context.fillStyle = "grey";
-			} else {
-				context.fillStyle = this.color;
-			}
-			context.beginPath();
-			context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-			context.fill();
+			this.drawMoving(context, deltaTime);
 		}
+
+		super.draw(context, deltaTime, gameTime); 
+	}
+
+	drawRespawning(context) {
+		context.drawImage(this.image, 
+			// Position of the top left corner of the sprite in the image
+			(8 + DIRECTION_TO_SPRITE_ORDER[this.direction]) * SPRITE_SIZE, SPRITE_SIZE,
+			// Height and width of the sprite in the image
+			SPRITE_SIZE, SPRITE_SIZE, 
+			// Position of the top left corner of the sprite on the canvas
+			this.x - SPRITE_SIZE, this.y - SPRITE_SIZE, 
+			// Height and width of the sprite on the canvas
+			SPRITE_SIZE * 2, SPRITE_SIZE * 2 
+		);
+	}
+
+	drawFrightened(context, deltaTime) {
+		this.frameDist += SPEED * (deltaTime / 1000);
+		const frame = Math.floor(this.frameDist / DISTANCE_PER_FRAME) % FRAME_COUNT;
+
+		context.drawImage(this.image, 
+			// Position of the top left corner of the sprite in the image
+			(8 + frame) * SPRITE_SIZE, 0,
+			// Height and width of the sprite in the image
+			SPRITE_SIZE, SPRITE_SIZE, 
+			// Position of the top left corner of the sprite on the canvas
+			this.x - SPRITE_SIZE, this.y - SPRITE_SIZE, 
+			// Height and width of the sprite on the canvas
+			SPRITE_SIZE * 2, SPRITE_SIZE * 2 
+		);
+	}
+
+	drawMoving(context, deltaTime) {
+		this.frameDist += SPEED * (deltaTime / 1000);
+		const frame = Math.floor(this.frameDist / DISTANCE_PER_FRAME) % FRAME_COUNT;
+
+		context.drawImage(this.image, 
+			// Position of the top left corner of the sprite in the image
+			(DIRECTION_TO_SPRITE_ORDER[this.direction] * FRAME_COUNT + frame) * SPRITE_SIZE, this.conf.spriteIndexY * SPRITE_SIZE,
+			// Height and width of the sprite in the image
+			SPRITE_SIZE, SPRITE_SIZE, 
+			// Position of the top left corner of the sprite on the canvas
+			this.x - SPRITE_SIZE, this.y - SPRITE_SIZE, 
+			// Height and width of the sprite on the canvas
+			SPRITE_SIZE * 2, SPRITE_SIZE * 2 
+		);
+	}
+
+	respawn() {
+		this.x = RESPAWN.x;
+		this.y = RESPAWN.y;
+		this.respawning = false;
 	}
 }

@@ -5,6 +5,7 @@ const context = canvas.getContext('2d');
 context.imageSmoothingEnabled = false;
 context.webkitImageSmoothingEnabled = false;
 context.mozImageSmoothingEnabled = false;
+context.msImageSmoothingEnabled = false;
 
 window.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {

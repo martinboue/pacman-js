@@ -17,14 +17,21 @@
             <p id="high-score">HIGH SCORE: 0</p>
         </div>
         <div id="game-container">
-            <img id="level-background" src="level.png"/>
+            <img class="pixel-art" id="level-background" src="level.png"/>
             <div class="message" id="ready">READY!</div>
             <div class="message" id="game-over">GAME OVER</div>
             <div class="message" id="pause">PAUSE</div>
-            <canvas id="game" width="448" height="496"></canvas>
+            <canvas class="pixel-art" id="game" width="448" height="496"></canvas>
+            <div style="display: none;">
+                <img id="pacman" class="pixel-art" src="./pacman.png" alt="Pacman">
+                <img id="pacman-dying" class="pixel-art" src="./pacman-dying.png" alt="Pacman dying animation">
+                <img id="ghosts" class="pixel-art" src="./ghosts.png" alt="Ghosts">
+            </div>
         </div>
         <div id="bottom-container">
-            <p id="lives"></p>
+            <div id="lives">
+                <img class="pixel-art" src="./life.png" alt="Life">
+            </div>
             <p id="bonuses">ABCD</p>
         </div>
     </div>

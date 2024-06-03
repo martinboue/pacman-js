@@ -1,5 +1,7 @@
 const HIGH_SCORE_KEY = 'high-score';
 
+const LIFE_IMG_TAG = '<img class="pixel-art" src="./life.png" alt="Life">';
+
 export class Score {
 
 	game;
@@ -25,8 +27,8 @@ export class Score {
 
 	initScore() {
 		this.scoreElement.innerText = "SCORE: " + this.points;
-		this.livesElement.innerText = this.lives;
 		this.highScoreElement.innerText = "HIGH SCORE: " + this.highScore;
+		this.updateLives();
 	}
 
 	add(points) {
@@ -36,7 +38,7 @@ export class Score {
 
 	removeLife() {
 		this.lives--;
-		this.livesElement.innerText = this.lives;
+		this.updateLives();
 
 		const stillAlive = this.lives >= 0;
 		if (!stillAlive) {
@@ -45,6 +47,10 @@ export class Score {
 		}
 
 		return stillAlive;
+	}
+
+	updateLives() {
+		this.livesElement.innerHTML = LIFE_IMG_TAG.repeat(this.lives);
 	}
 
 	updateHighScore() {

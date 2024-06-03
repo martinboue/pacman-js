@@ -69,22 +69,32 @@ h1 {
     display: none;
 }
 
+.pixel-art {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
 #level-background {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
 }
 
 canvas {
     z-index: 1;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
+    height: 496px;
+    width: 448px;
+}
+
+#lives > * {
+    width: 26px;
+}
+
+#lives > *:not(:last-child) {
+    margin-right: 10px;
 }
 
 footer {

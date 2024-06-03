@@ -1,7 +1,8 @@
-import {CELL_SIZE, WALL} from "./constants.js";
+import {BARRIER, CELL_SIZE, WALL} from "./constants.js";
 
 export class Entity {
 
+	/** Center position of the entity */
 	x;
 	y;
 	size;
@@ -37,6 +38,10 @@ export class Entity {
 			context.strokeStyle = this.debugColor;
 			context.lineWidth = 1;
 			context.strokeRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+
+			// DEBUG : Draw center of entity
+			context.fillStyle = 'white';
+			context.fillRect(this.x, this.y, 1, 1);
 		}
 	}
 
@@ -56,7 +61,8 @@ export class Entity {
 				cell.x++;
 				break;
 		}
-		return this.grid[cell.y][cell.x] !== WALL;
+		const value = this.grid[cell.y][cell.x];
+		return value !== WALL && value !== BARRIER;
 	}
 
 	move(deltaTime, gameTime) {

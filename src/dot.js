@@ -9,12 +9,10 @@ export class Dot extends Entity {
     }
 
     draw(context, deltaTime, gameTime) {
-        super.draw();
-
         context.fillStyle = 'pink';
         context.fillRect(this.x, this.y, this.size, this.size);
     }
-
+ 
 	move(deltaTime, gameTime) {
 		const pacmanCell = this.pacman.getCenterCell(this.pacman.x, this.pacman.y);
 		const cell = this.getCenterCell(this.x, this.y);

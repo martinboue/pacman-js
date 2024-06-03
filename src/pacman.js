@@ -2,16 +2,10 @@ import { Entity } from "./entity.js";
 import { WALL, BARRIER, CELL_SIZE, PACMAN_SPAWN } from "./constants.js";
 
 const SPEED = 100; // px/s
+const DYING_DURATION = 1800; // ms
 const RESPAWN_DURATION = 3000; // ms
 const ENERGIZED_DURATION = 5000; // ms
 const DIRECTION_BUFFER_DURATION = 200; // ms
-
-const DIRECTION_TO_ANGLE = {
-	UP: -0.5 * Math.PI,
-	DOWN: 0.5 * Math.PI,
-	LEFT: Math.PI,
-	RIGHT: 0
-};
 
 const DIRECTION_TO_OPPOSITE = {
 	UP: 'DOWN',
@@ -25,7 +19,22 @@ const KEY_TO_DIRECTION = {
 	ArrowDown: 'DOWN',
 	ArrowLeft: 'LEFT',
 	ArrowRight: 'RIGHT',
-}
+};
+
+const SPRITE_SIZE = 15; // px
+const DIRECTION_TO_SPRITE = {
+	UP: SPRITE_SIZE * 2,
+	DOWN: SPRITE_SIZE * 3,
+	LEFT: SPRITE_SIZE,
+	RIGHT: 0
+};
+const FRAME_COUNT = 3;
+
+const FRAME_DYING_COUNT = 11;
+const SPRITE_DYING_SIZE = 18; // px
+
+// Distance pacman needs to move to change animation frame
+const DISTANCE_PER_FRAME = CELL_SIZE / 2; // px
 
 export class Pacman extends Entity {
 
@@ -33,10 +42,20 @@ export class Pacman extends Entity {
 	game;
 	direction;
 	nextDirection;
+	stopped;
 	changedDirectionTime;
 	respawning;
 	energized;
 	ghostEatenWhileEnergized;
+	image;
+	imageDying;
+
+	/** Distance pacman has moved since last frame change */
+	frameDist;
+	/** Current frame index from 0 to 2 */
+	frame;
+	frameReverse;
+	frameDyingTime;
 
 	constructor(grid, score, game) {
 		super(PACMAN_SPAWN.x, PACMAN_SPAWN.y, CELL_SIZE * 1.5, grid, 'yellow');
@@ -44,9 +63,14 @@ export class Pacman extends Entity {
 		this.game = game;
 		this.direction = 'RIGHT';
 		this.nextDirection = null;
+		this.stopped = false;
 		this.respawning = false;
 		this.energized = false;
 		this.ghostEatenWhileEnergized = 0;
+		this.frameDist = 0;
+		this.frame = 0;
+		this.frameReverse = false;
+		this.frameDyingTime = 0;
 
 		window.addEventListener('keydown', (event) => {
 			if (this.game.paused || this.game.starting || this.respawning) return;
@@ -56,6 +80,9 @@ export class Pacman extends Entity {
 				this.changedDirectionTime = 0;
 			}
 		});
+
+		this.image = document.getElementById('pacman');
+		this.imageDying = document.getElementById('pacman-dying');
 	}
 
 	move(deltaTime) {
@@ -106,32 +133,79 @@ export class Pacman extends Entity {
 		else if (this.grid[newCell.y][newCell.x] !== WALL && this.grid[newCell.y][newCell.x] !== BARRIER) {
 			this.x = newX;
 			this.y = newY;
+			this.stopped = false;
+		} else {
+			this.stopped = true;
 		}
 	}
 
 	draw(context, deltaTime, gameTime) {
-		// TODO : draw dying/respawning
-		
-		super.draw(context);
+		if (this.respawning) {
+			this.drawDying(context, deltaTime);
+		} else if (this.stopped) {
+			this.drawStopped(context);
+		} else {
+			this.drawMoving(context, deltaTime);
+		}
 
-		context.fillStyle = 'yellow';
-		const mouthSpeed = 0.01;
-		const topOpenAngle = 0.75 * Math.PI
-		const openToCloseAngle = 0.25 * Math.PI;
-		// Make pacman face its direction
-		const angleDir = DIRECTION_TO_ANGLE[this.direction];
+		super.draw(context, deltaTime, gameTime);
+	}
 
-		// Top mouth
-		context.beginPath();
-		const topAngle = topOpenAngle + (Math.sin(gameTime * mouthSpeed) + 1) / 2 * openToCloseAngle;
-		context.arc(this.x, this.y, this.radius, topAngle + angleDir, topAngle - Math.PI + angleDir);
-		context.fill();
+	drawDying(context, deltaTime) {
+		if (this.frameDyingTime >= DYING_DURATION) return;
 
-		// Bottom mouth
-		context.beginPath();
-		const bottomAngle = (-1 * Math.sin(gameTime * mouthSpeed) + 1) / 2 * openToCloseAngle;
-		context.arc(this.x, this.y, this.radius, bottomAngle + angleDir, bottomAngle - Math.PI + angleDir);
-		context.fill();
+		this.frameDyingTime += deltaTime;
+		const frameDuration = DYING_DURATION / FRAME_DYING_COUNT;
+		const dyingFrame = Math.floor(this.frameDyingTime / frameDuration);
+
+		context.drawImage(this.imageDying, 
+			// Position of the top left corner of the sprite in the image
+			dyingFrame * SPRITE_DYING_SIZE, 0,
+			// Height and width of the sprite in the image
+			SPRITE_DYING_SIZE, SPRITE_DYING_SIZE, 
+			// Position of the top left corner of the sprite on the canvas
+			this.x - SPRITE_DYING_SIZE, this.y  - SPRITE_DYING_SIZE, 
+			// Height and width of the sprite on the canvas
+			SPRITE_DYING_SIZE * 2, SPRITE_DYING_SIZE * 2
+		);
+	}
+
+	drawMoving(context, deltaTime) {
+		// We use distance to change frame to run animation faster when pacman is going faster
+		this.frameDist += SPEED * (deltaTime / 1000);
+
+		if (this.frameDist >= DISTANCE_PER_FRAME) {
+			this.frame = this.frameReverse ? (this.frame - 1) : (this.frame + 1);
+			if (this.frame === 0 || this.frame === FRAME_COUNT - 1) {
+				this.frameReverse = !this.frameReverse;
+			}
+			this.frameDist = 0;
+		}
+
+		context.drawImage(this.image, 
+			// Position of the top left corner of the sprite in the image
+			this.frame * SPRITE_SIZE, DIRECTION_TO_SPRITE[this.direction],
+			// Height and width of the sprite in the image
+			SPRITE_SIZE, SPRITE_SIZE, 
+			// Position of the top left corner of the sprite on the canvas
+			this.x - SPRITE_SIZE, this.y - SPRITE_SIZE, 
+			// Height and width of the sprite on the canvas
+			SPRITE_SIZE * 2 , SPRITE_SIZE * 2
+		);
+	}
+
+	drawStopped(context) {
+		// Always draw the mouth opened when stopped
+		context.drawImage(this.image, 
+			// Position of the top left corner of the sprite in the image
+			SPRITE_SIZE, DIRECTION_TO_SPRITE[this.direction],
+			// Height and width of the sprite in the image
+			SPRITE_SIZE, SPRITE_SIZE, 
+			// Position of the top left corner of the sprite on the canvas
+			this.x - SPRITE_SIZE, this.y - SPRITE_SIZE, 
+			// Height and width of the sprite on the canvas
+			SPRITE_SIZE * 2 , SPRITE_SIZE * 2
+		);
 	}
 
 	die() {
@@ -139,13 +213,14 @@ export class Pacman extends Entity {
 		
 		if (stillAlive) {
 			this.respawning = true;
-			this.direction = 'RIGHT';
+			this.frameDyingTime = 0;
 			
 			setTimeout(() => {
 				this.respawning = false;
 				this.x = PACMAN_SPAWN.x;
 				this.y = PACMAN_SPAWN.y;
-			}, RESPAWN_DURATION);
+				this.direction = 'RIGHT';
+			}, DYING_DURATION + RESPAWN_DURATION);
 		} else {
 			this.dead = true;
 		}

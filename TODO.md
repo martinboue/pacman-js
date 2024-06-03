@@ -1,9 +1,14 @@
 # TODO 
 - Ghosts behavior: https://gameinternals.com/understanding-pac-man-ghost-behavior
-- Use sprites for Pacman and Ghosts
-- Ghost respawning
-- Show points when eating ghost
+- Improve pacman dying and respawn animation
+    - Freeze frame
+    - Hide ghosts
+    - Wait for dying animation
+    - Respawn ghosts and show ready
+- Ghost respawning moving to ghost house
+- Show points and freeze when eating ghost
 - Fruits
 - Phases/levels
 - Improve collision detection with wall
 - Sound
+- Responsive layout
