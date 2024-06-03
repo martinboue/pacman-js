@@ -1,4 +1,4 @@
-import { CELL_SIZE } from "./constants.js";
+import {CELL_SIZE, WALL} from "./constants.js";
 
 export class Entity {
 
@@ -38,6 +38,25 @@ export class Entity {
 			context.lineWidth = 1;
 			context.strokeRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
 		}
+	}
+
+	canMoveTo(dir) {
+		const cell = this.getCenterCell(this.x, this.y);
+		switch (dir) {
+			case "UP":
+				cell.y--;
+				break;
+			case "DOWN":
+				cell.y++;
+				break;
+			case "LEFT":
+				cell.x--;
+				break;
+			case "RIGHT":
+				cell.x++;
+				break;
+		}
+		return this.grid[cell.y][cell.x] !== WALL;
 	}
 
 	move(deltaTime, gameTime) {

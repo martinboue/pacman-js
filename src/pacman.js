@@ -3,44 +3,57 @@ import { WALL, BARRIER, CELL_SIZE, PACMAN_SPAWN } from "./constants.js";
 
 const SPEED = 100; // px/s
 const RESPAWN_DURATION = 3000; // ms
+const ENERGIZED_DURATION = 5000; // ms
+const DIRECTION_BUFFER_DURATION = 200; // ms
 
-const directionsToAngle = {
+const DIRECTION_TO_ANGLE = {
 	UP: -0.5 * Math.PI,
 	DOWN: 0.5 * Math.PI,
 	LEFT: Math.PI,
 	RIGHT: 0
 };
 
+const DIRECTION_TO_OPPOSITE = {
+	UP: 'DOWN',
+	DOWN: 'UP',
+	LEFT: 'RIGHT',
+	RIGHT: 'LEFT'
+};
+
+const KEY_TO_DIRECTION = {
+	ArrowUp: 'UP',
+	ArrowDown: 'DOWN',
+	ArrowLeft: 'LEFT',
+	ArrowRight: 'RIGHT',
+}
+
 export class Pacman extends Entity {
 
 	score;
 	game;
 	direction;
+	nextDirection;
+	changedDirectionTime;
 	respawning;
+	energized;
+	ghostEatenWhileEnergized;
 
 	constructor(grid, score, game) {
 		super(PACMAN_SPAWN.x, PACMAN_SPAWN.y, CELL_SIZE * 1.5, grid, 'yellow');
 		this.score = score;
 		this.game = game;
 		this.direction = 'RIGHT';
+		this.nextDirection = null;
 		this.respawning = false;
+		this.energized = false;
+		this.ghostEatenWhileEnergized = 0;
 
 		window.addEventListener('keydown', (event) => {
 			if (this.game.paused || this.game.starting || this.respawning) return;
 
-			switch (event.key) {
-				case 'ArrowUp':
-					this.direction = 'UP';
-					break;
-				case 'ArrowDown':
-					this.direction = 'DOWN';
-					break;
-				case 'ArrowLeft':
-					this.direction = 'LEFT';
-					break;
-				case 'ArrowRight':
-					this.direction = 'RIGHT';
-					break;
+			if (event.key in KEY_TO_DIRECTION) {
+				this.nextDirection = KEY_TO_DIRECTION[event.key];
+				this.changedDirectionTime = 0;
 			}
 		});
 	}
@@ -50,6 +63,26 @@ export class Pacman extends Entity {
 
 		let newX = this.x;
 		let newY = this.y;
+
+		// Handle direction buffer
+		this.changedDirectionTime += deltaTime;
+		if (this.changedDirectionTime >= DIRECTION_BUFFER_DURATION && this.nextDirection != null) {
+			this.nextDirection = null;
+		}
+
+		// Changing direction
+		if (this.nextDirection != null) {
+			// Moving in opposite direction
+			if (this.nextDirection === DIRECTION_TO_OPPOSITE[this.direction]) {
+				this.direction = this.nextDirection;
+				this.nextDirection = null;
+			}
+			// Turning
+			else if (this.canMoveTo(this.nextDirection)) {
+				this.direction = this.nextDirection;
+				this.nextDirection = null;
+			}
+		}
 
 		const dist = (deltaTime / 1000) * SPEED
 		if (this.direction === 'UP') newY -= dist;
@@ -86,7 +119,7 @@ export class Pacman extends Entity {
 		const topOpenAngle = 0.75 * Math.PI
 		const openToCloseAngle = 0.25 * Math.PI;
 		// Make pacman face its direction
-		const angleDir = directionsToAngle[this.direction];
+		const angleDir = DIRECTION_TO_ANGLE[this.direction];
 
 		// Top mouth
 		context.beginPath();
@@ -116,6 +149,16 @@ export class Pacman extends Entity {
 		} else {
 			this.dead = true;
 		}
+	}
+
+	energize() {
+		if (!this.energized) {
+			this.ghostEatenWhileEnergized = 0;
+		}
+		this.energized = true;
+		setTimeout(() => {
+			this.energized = false;
+		}, ENERGIZED_DURATION);
 	}
 
 }

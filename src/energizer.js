@@ -46,6 +46,7 @@ export class Energizer extends Entity {
 	die() {
 		this.score.add(50);
 		this.dead = true;
+		this.pacman.energize();
 	}
 
 }

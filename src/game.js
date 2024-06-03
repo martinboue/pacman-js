@@ -55,10 +55,10 @@ export class Game {
     
         this.entities.push(
             this.pacman,
-            new Ghost(14 * CELL_SIZE, 11 * CELL_SIZE + CELL_SIZE / 2, 'RIGHT', 'red', level, this.pacman),
-            new Ghost(12 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'DOWN', 'cyan', level, this.pacman),
-            new Ghost(14 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'LEFT', 'pink', level, this.pacman),
-            new Ghost(16 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'UP', 'orange', level, this.pacman)
+            new Ghost(14 * CELL_SIZE, 11 * CELL_SIZE + CELL_SIZE / 2, 'RIGHT', 'red', level, this.pacman, this.score),
+            new Ghost(12 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'DOWN', 'cyan', level, this.pacman, this.score),
+            new Ghost(14 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'LEFT', 'pink', level, this.pacman, this.score),
+            new Ghost(16 * CELL_SIZE, 14 * CELL_SIZE + CELL_SIZE / 2, 'UP', 'orange', level, this.pacman, this.score)
         );
     
         // Draw once then start ready timer

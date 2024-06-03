@@ -1,6 +1,9 @@
 # TODO 
-- Ghosts behavior
+- Ghosts behavior: https://gameinternals.com/understanding-pac-man-ghost-behavior
 - Use sprites for Pacman and Ghosts
-- Energizer system
-- Middle bonus
+- Ghost respawning
+- Show points when eating ghost
+- Fruits
+- Phases/levels
 - Improve collision detection with wall
+- Sound
