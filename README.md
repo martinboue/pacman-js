@@ -1,4 +1,4 @@
-# PACMAN.js
+# PAC-MAN.js
 Classic Pac-Man game written in JavaScript.
 
 ## Credits
