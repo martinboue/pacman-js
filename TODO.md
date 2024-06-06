@@ -1,5 +1,6 @@
 # TODO 
 - Ghosts behavior: https://gameinternals.com/understanding-pac-man-ghost-behavior
+- Energizer sprite
 - Improve pacman dying and respawn animation
     - Freeze frame
     - Hide ghosts
@@ -7,10 +8,10 @@
     - Respawn ghosts and show ready
 - Ghost respawning moving to ghost house
 - Show points and freeze when eating ghost
+- Blink ghosts when energy is about to end
 - Fruits
 - Phases/levels
     - Increase difficulty
-    - Reset level when every dot eaten
-- Improve collision detection with wall
+    - Blink level color and reset level when every dot eaten
 - Sound
 - Responsive layout

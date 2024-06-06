@@ -31,7 +31,7 @@ export class Entity {
 		return { x: cellX, y: cellY };
 	}
 
-	draw(context, deltaTime, gameTime) {
+	draw(context, deltaTime) {
 		if (this.debug) {
 			// DEBUG: Draw center cell
 			const cell = this.getCenterCell(this.x, this.y);
@@ -45,27 +45,7 @@ export class Entity {
 		}
 	}
 
-	canMoveTo(dir) {
-		const cell = this.getCenterCell(this.x, this.y);
-		switch (dir) {
-			case "UP":
-				cell.y--;
-				break;
-			case "DOWN":
-				cell.y++;
-				break;
-			case "LEFT":
-				cell.x--;
-				break;
-			case "RIGHT":
-				cell.x++;
-				break;
-		}
-		const value = this.grid[cell.y][cell.x];
-		return value !== WALL && value !== BARRIER;
-	}
-
-	move(deltaTime, gameTime) {
+	move(deltaTime) {
 		// Do nothing
 	}
 

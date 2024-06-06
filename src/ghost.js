@@ -1,7 +1,8 @@
 import { Entity } from "./entity.js";
 import { WALL, CELL_SIZE } from "./constants.js";
+import { SPEED as PACMAN_SPEED } from "./pacman.js";
 
-const SPEED = 90; // px/s
+const SPEED = PACMAN_SPEED * 0.875; // px/s
 const FRIGHTENED_SPEED = 60; // px/s
 const RESPAWN_DURATION = 3000; // ms
 const RESPAWN = { x: 14 * CELL_SIZE, y: 14 * CELL_SIZE + CELL_SIZE / 2 };
@@ -91,7 +92,7 @@ export class Ghost extends Entity {
 	}
 
 
-	draw(context, deltaTime, gameTime) {
+	draw(context, deltaTime) {
 		if (this.respawning) {
 			this.drawRespawning(context);
 		} else if (this.pacman.energized) {
@@ -100,7 +101,7 @@ export class Ghost extends Entity {
 			this.drawMoving(context, deltaTime);
 		}
 
-		super.draw(context, deltaTime, gameTime); 
+		super.draw(context, deltaTime);
 	}
 
 	drawRespawning(context) {

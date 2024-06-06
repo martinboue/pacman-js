@@ -6,7 +6,7 @@ import { DOT, ENERGIZER, READY_TIME, CELL_SIZE } from "./constants.js";
 import { Energizer } from "./energizer.js";
 import { Dot } from './dot.js';
 
-const DELTA_TIME = 1000 / 60; // ms
+const DESIRED_DELTA_TIME = 1000 / 60; // ms
 
 export class Game {
 
@@ -63,15 +63,15 @@ export class Game {
     
         // Draw once then start ready timer
         this.starting = true;
-        this.draw();
+        this.draw(DESIRED_DELTA_TIME);
         this.readyElement.style.display = 'block';
         this.gameOverElement.style.display = "none";
         this.pauseElement.style.display = "none";
         setTimeout(() => {
             this.starting = false;
-            this.interval = setInterval(this.run, DELTA_TIME);
+            this.time = Date.now();
+            this.interval = setInterval(this.update, DESIRED_DELTA_TIME);
             this.readyElement.style.display = 'none';
-            window.addEventListener('keydown', this.handleKeyDown);
         }, READY_TIME);
     }
 
@@ -85,29 +85,31 @@ export class Game {
     }
 
     resume() {
-        this.interval = setInterval(this.run, DELTA_TIME);
+        this.time = Date.now();
+        this.interval = setInterval(this.update, DESIRED_DELTA_TIME);
         this.pauseElement.style.display = 'none';
         this.paused = false;
     }
 
-    run = () => {
-        this.time += DELTA_TIME;
-        this.draw();
-        this.entities.forEach(e => e.move(DELTA_TIME, this.time));
+    update = () => {
+        // Compute time since last frame update
+        const deltaTime = Date.now() - this.time;
+        this.time += deltaTime;
+
+        this.draw(deltaTime);
+        this.entities.forEach(e => e.move(deltaTime));
         this.entities = this.entities.filter(e => !e.dead);
     }
 
-    draw() {
+    draw(deltaTime) {
         // Clear canvas
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Draw entities
-        this.entities.forEach(e => e.draw(this.context, DELTA_TIME, this.time));
-
+        this.entities.forEach(e => e.draw(this.context, deltaTime));
     }
 
     end() {
-        window.removeEventListener('keydown', this.handleKeyDown);
         this.over = true;
         this.gameOverElement.style.display = "block";
         clearInterval(this.interval);

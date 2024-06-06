@@ -8,12 +8,12 @@ export class Dot extends Entity {
         this.score = score;
     }
 
-    draw(context, deltaTime, gameTime) {
+    draw(context, deltaTime) {
         context.fillStyle = 'pink';
         context.fillRect(this.x, this.y, this.size, this.size);
     }
  
-	move(deltaTime, gameTime) {
+	move(deltaTime) {
 		const pacmanCell = this.pacman.getCenterCell(this.pacman.x, this.pacman.y);
 		const cell = this.getCenterCell(this.x, this.y);
 		if (pacmanCell.x === cell.x && pacmanCell.y === cell.y) {

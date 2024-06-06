@@ -1,17 +1,17 @@
 import { Entity } from "./entity.js";
 import { WALL, BARRIER, CELL_SIZE, PACMAN_SPAWN } from "./constants.js";
 
-const SPEED = 100; // px/s
+export const SPEED = CELL_SIZE * 11; // px/s
 const DYING_DURATION = 1800; // ms
 const RESPAWN_DURATION = 3000; // ms
 const ENERGIZED_DURATION = 5000; // ms
 const DIRECTION_BUFFER_DURATION = 200; // ms
 
-const DIRECTION_TO_OPPOSITE = {
-	UP: 'DOWN',
-	DOWN: 'UP',
-	LEFT: 'RIGHT',
-	RIGHT: 'LEFT'
+const DIRECTIONS = {
+	UP: { x: 0, y: -1 },
+	DOWN: { x: 0, y: 1 },
+	LEFT: { x: -1, y: 0 },
+	RIGHT: { x: 1, y: 0 }
 };
 
 const KEY_TO_DIRECTION = {
@@ -85,12 +85,46 @@ export class Pacman extends Entity {
 		this.imageDying = document.getElementById('pacman-dying');
 	}
 
+
 	move(deltaTime) {
 		if (this.respawning) return;
 
-		let newX = this.x;
-		let newY = this.y;
+		const nextPos = {x: this.x, y: this.y};
 
+		// Compute distance to move
+		const dist = (deltaTime / 1000) * SPEED;
+		const distVector = {x: dist * DIRECTIONS[this.direction].x, y: dist * DIRECTIONS[this.direction].y };
+		nextPos.x += distVector.x;
+		nextPos.y += distVector.y;
+
+		const newCell = this.getCenterCell(nextPos.x, nextPos.y);
+
+		// Wrap from left to right
+		if (nextPos.x < 0) {
+			newCell.x = this.grid[0].length - 1
+			this.x = (newCell.x + 1) * CELL_SIZE;
+		}
+		// Wrap from right to left
+		else if (nextPos.x >= (this.grid[0].length + 1) * CELL_SIZE) {
+			newCell.x = 0;
+			this.x = 0;
+		}
+		// Collision detection : check if the new position is valid
+		else if (this.canMoveForward(nextPos.x, nextPos.y)) {
+			this.x = nextPos.x;
+			this.y = nextPos.y;
+			this.stopped = false;
+		} else {
+			this.stopped = true;
+		}
+
+		// Make sure pacman is always centered along its axis
+		this.snapToAxis(newCell);
+
+		this.handleDirectionChange(deltaTime, nextPos);
+	}
+
+	handleDirectionChange(deltaTime, nextPos) {
 		// Handle direction buffer
 		this.changedDirectionTime += deltaTime;
 		if (this.changedDirectionTime >= DIRECTION_BUFFER_DURATION && this.nextDirection != null) {
@@ -98,48 +132,62 @@ export class Pacman extends Entity {
 		}
 
 		// Changing direction
-		if (this.nextDirection != null) {
-			// Moving in opposite direction
-			if (this.nextDirection === DIRECTION_TO_OPPOSITE[this.direction]) {
-				this.direction = this.nextDirection;
-				this.nextDirection = null;
-			}
-			// Turning
-			else if (this.canMoveTo(this.nextDirection)) {
-				this.direction = this.nextDirection;
-				this.nextDirection = null;
-			}
-		}
-
-		const dist = (deltaTime / 1000) * SPEED
-		if (this.direction === 'UP') newY -= dist;
-		else if (this.direction === 'DOWN') newY += dist;
-		else if (this.direction === 'LEFT') newX -= dist;
-		else if (this.direction === 'RIGHT') newX += dist;
-
-		const newCell = this.getCenterCell(newX, newY);
-
-		// Wrap from left to right
-		if (newX < 0) {
-			newCell.x = this.grid[0].length - 1
-			this.x = (newCell.x + 1) * CELL_SIZE;
-		}
-		// Wrap from right to left
-		else if (newX >= (this.grid[0].length + 1) * CELL_SIZE) {
-			newCell.x = 0;
-			this.x = 0;
-		}
-		// Collision detection : check if the new position is valid
-		else if (this.grid[newCell.y][newCell.x] !== WALL && this.grid[newCell.y][newCell.x] !== BARRIER) {
-			this.x = newX;
-			this.y = newY;
-			this.stopped = false;
-		} else {
-			this.stopped = true;
+		if (this.nextDirection != null && this.canMoveTo(this.nextDirection) && this.centerHasBeenCrossed(nextPos)) {
+			this.direction = this.nextDirection;
+			this.nextDirection = null;
 		}
 	}
 
-	draw(context, deltaTime, gameTime) {
+	snapToAxis(newCell) {
+		// Center Pacman on the Y-axis when moving horizontally
+		if (this.stopped || this.direction === 'LEFT' || this.direction === 'RIGHT') {
+			this.y = newCell.y * CELL_SIZE + CELL_SIZE / 2;
+		}
+		// Center Pacman on the X-axis when moving vertically
+		if (this.stopped || this.direction === 'UP' || this.direction === 'DOWN') {
+			this.x = newCell.x * CELL_SIZE + CELL_SIZE / 2;
+		}
+	}
+
+	centerHasBeenCrossed(nextPos) {
+		// Make sure the center of pacman has crossed the center of the cell before changing direction
+		const centerCell = this.getCenterCell(nextPos.x, nextPos.y);
+		if (this.nextDirection === 'UP' || this.nextDirection === 'DOWN') {
+			if (this.direction === 'LEFT') return nextPos.x <= centerCell.x * CELL_SIZE + CELL_SIZE / 2;
+			if (this.direction === 'RIGHT') return nextPos.x >= centerCell.x * CELL_SIZE + CELL_SIZE / 2;
+		}
+		if (this.nextDirection === 'LEFT' || this.nextDirection === 'RIGHT') {
+			if (this.direction === 'UP') return nextPos.y <= centerCell.y * CELL_SIZE + CELL_SIZE / 2;
+			if (this.direction === 'DOWN') return nextPos.y >= centerCell.y * CELL_SIZE + CELL_SIZE / 2;
+		}
+
+		// Reverse to opposite direction is always true
+		return true;
+	}
+
+	canMoveTo(dir) {
+		const cell = this.getCenterCell(this.x, this.y);
+		if (dir === 'UP') cell.y--;
+		else if (dir === 'DOWN') cell.y++;
+		else if (dir === 'LEFT') cell.x--;
+		else if (dir === 'RIGHT') cell.x++;
+
+		const value = this.grid[cell.y][cell.x];
+		return value !== WALL && value !== BARRIER;
+	}
+
+	canMoveForward(nextX, nextY) {
+		// Get the cell at the edge of pacman in its direction
+		let edgeCell;
+		if (this.direction === 'UP') edgeCell = this.getCenterCell(nextX, nextY - CELL_SIZE / 2);
+		if (this.direction === 'DOWN') edgeCell = this.getCenterCell(nextX, nextY + CELL_SIZE / 2);
+		if (this.direction === 'LEFT') edgeCell = this.getCenterCell(nextX - CELL_SIZE / 2, nextY);
+		if (this.direction === 'RIGHT') edgeCell = this.getCenterCell(nextX + CELL_SIZE / 2, nextY);
+		const tile = this.grid[edgeCell.y][edgeCell.x]
+		return tile !== WALL && tile !== BARRIER;
+	}
+
+	draw(context, deltaTime) {
 		if (this.respawning) {
 			this.drawDying(context, deltaTime);
 		} else if (this.stopped) {
@@ -148,7 +196,7 @@ export class Pacman extends Entity {
 			this.drawMoving(context, deltaTime);
 		}
 
-		super.draw(context, deltaTime, gameTime);
+		super.draw(context, deltaTime);
 	}
 
 	drawDying(context, deltaTime) {
